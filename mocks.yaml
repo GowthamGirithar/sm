@@ -1,0 +1,6 @@
+#mockgen -destination=mocks/mock_broker.go -package=mocks sm/smbroker BrokerI
+#we can have dir name here and generate mocks using the make
+- input dir: github.com/GowthamGirithar/sm/smbroker
+  interfaces:
+    - BrokerI
+  destination: Mocks.go

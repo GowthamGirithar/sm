@@ -32,12 +32,22 @@ type RestStim struct {
 	MoType reflect.Type
 }
 
+type ServiceType int
+
+//define the type of the service to broadcast messages
+//kind of grouping
+const (
+	ServiceTypeAll ServiceType =iota
+	ServiceTypeGeo
+)
+
 //Message contains communication endpoints details
 type Message struct {
 	TargetSrvName string
 	SrcSrvName string
 	Sync bool
 	RestStim RestStim
+	SrvType ServiceType
 }
 
 type Executer interface {
