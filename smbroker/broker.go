@@ -3,24 +3,15 @@ package smbroker
 import (
 	"context"
 	"go.uber.org/zap"
-	"math/rand"
 	"sm/smlog"
+	"sm/smrand"
 	"sync"
 	"time"
 )
 
-type BrokerI interface {
-	//Register to register the services and which returns channels to deliver requests
-	Register(ctx context.Context, srvName string) (chan Message, error)
-	//Broadcast to broadcast messages to all the services
-	Broadcast(ctx context.Context, msg Message) error
-	//Send to send the message to the target services
-	Send(ctx context.Context, targetSrvName string, msg Message) (chan Message, error)
-	//Response to respond the request
-	Response(ctx context.Context, targetSrvName string, msg Message) error
-	//GetServices to get all the services registered in this broker
-	GetServices(ctx context.Context) ([]string, error)
-}
+const (
+	MaxQueueSize = 100
+)
 
 var (
 	//brokerInstance
@@ -37,11 +28,25 @@ var (
 	services []Service
 )
 
+//BrokerI defines method for the broker related communications
+type BrokerI interface {
+	//Register to register the services and which returns channels to deliver requests
+	Register(ctx context.Context, srvName string) (chan Message, error)
+	//Broadcast to broadcast messages to all the services
+	Broadcast(ctx context.Context, msg Message) error
+	//Send to send the message to the target services
+	Send(ctx context.Context, targetSrvName string, msg Message) (chan Message, error)
+	//Response to respond the request
+	Response(ctx context.Context, targetSrvName string, msg Message) error
+	//GetServices to get all the services registered in this broker
+	GetServices(ctx context.Context) ([]string, error)
+}
+
 //Service contains service information
 type Service struct {
-	Name     string
-	BindDate time.Time
-	Type     ServiceType
+	Name           string
+	RegisteredDate time.Time
+	Type           ServiceType
 }
 
 //Broker contains broker instance details
@@ -60,6 +65,7 @@ func (b *Broker) Register(ctx context.Context, srvName string) (chan Message, er
 	reqLock.Unlock()
 
 	//health channel to check services health
+	//if it dont receive status for >4 sec, it will be off-boarded
 	healthCh := make(chan Message)
 	healthLock.Lock()
 	healthChan[srvName] = healthCh
@@ -72,8 +78,8 @@ func (b *Broker) Register(ctx context.Context, srvName string) (chan Message, er
 
 	//add services to registered list
 	srv := Service{
-		Name:     srvName,
-		BindDate: time.Now(),
+		Name:           srvName,
+		RegisteredDate: time.Now(),
 	}
 	services = append(services, srv)
 
@@ -110,12 +116,13 @@ func (b *Broker) Send(ctx context.Context, targetSrvName string, msg Message) (c
 		c <- msg
 	} else {
 
-		//response channel
-		resChan := make(chan Message)
+		//response channel- can queue upto MaxQueueSize
+		//if we dont give any, it gets blocked unless any one read a request
+		resChan := make(chan Message, MaxQueueSize)
 
 		if msg.RestStim.CorrelationId == "" {
 			//generate the correlation id
-			corrId := string(rand.Int63())
+			corrId := smrand.RandomString(8)
 			msg.RestStim.CorrelationId = corrId
 		}
 
@@ -130,8 +137,7 @@ func (b *Broker) Send(ctx context.Context, targetSrvName string, msg Message) (c
 			aSyncChan[msg.RestStim.CorrelationId] = resChan
 			gClientAsncMapLock.Unlock()
 		}
-
-		logger.Sugar().Infof("The message is sent to %v from %v", targetSrvName, msg.SrcSrvName)
+		logger.Sugar().Debugf("The message is sent to %v from %v", targetSrvName, msg.SrcSrvName)
 		return resChan, nil
 	}
 	return nil, nil
@@ -141,11 +147,15 @@ func (b *Broker) Response(ctx context.Context, targetSrvName string, msg Message
 	logger := smlog.MustFromContext(ctx)
 	//Pass the msg to the corresponding response channel for which the request is listening
 	if msg.RestStim.IsResponse && msg.RestStim.CorrelationId != "" {
-		logger.Sugar().Infof("Response received from %v is sent to %v", msg.SrcSrvName, targetSrvName)
+		logger.Sugar().Debugf("Response received from %v is sent to %v", msg.SrcSrvName, targetSrvName)
 		if msg.Sync {
-			syncChan[msg.RestStim.CorrelationId] <- msg
+			if ch, ok := syncChan[msg.RestStim.CorrelationId]; ok {
+				ch <- msg
+			}
 		} else {
-			aSyncChan[msg.RestStim.CorrelationId] <- msg
+			if ch, ok := aSyncChan[msg.RestStim.CorrelationId]; ok {
+				ch <- msg
+			}
 		}
 	}
 

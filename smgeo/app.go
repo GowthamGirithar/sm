@@ -21,6 +21,8 @@ var (
 	//ShutdownChann to close all the channels of this service
 	ShutdownChann = make(ShutdownChannel)
 	osSignal      = make(chan os.Signal, 1)
+	//to send health status to broker every 2 second
+	healthTicker = time.NewTicker(2 * time.Second)
 )
 
 func init() {
@@ -67,8 +69,8 @@ func init() {
 func SendHealthStatus(aInCtx context.Context, geoSrv GeoService, chann chan smbroker.Message) {
 	for {
 		select {
-		//send messages to broker every 4 second and target name is empty for the broker
-		case <-time.After(4 * time.Second):
+		//send messages to broker every 2 second and target name is empty for the broker
+		case <-healthTicker.C:
 			geoSrv.Broker.Send(aInCtx, "", smbroker.Message{})
 		//if broker closes the channel and make it to null, we will stop this goroutine
 		case <-ShutdownChann:
@@ -96,7 +98,7 @@ func ProcessRequests(aInCtx context.Context, geoSrv GeoService, reqChan chan smb
 			v, lOk := mo.(GeoServiceI)
 			if lOk {
 				switch msg.RestStim.Verb {
-				case "GET":
+				case http.MethodGet:
 					//parse the URL to get the input params
 					parsedURL, err := url.Parse(msg.RestStim.RestUrl)
 					if err != nil {
@@ -113,7 +115,7 @@ func ProcessRequests(aInCtx context.Context, geoSrv GeoService, reqChan chan smb
 						msg.RestStim.RespBody = strconv.FormatFloat(output, 'f', 6, 64)
 						msg.RestStim.RespStatus = http.StatusOK
 					}
-				case "PUT":
+				case http.MethodPut:
 					v.UpdateCoordinates(aInCtx)
 					msg.RestStim.RespStatus = http.StatusOK
 				}

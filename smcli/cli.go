@@ -29,6 +29,8 @@ var (
 	opCountLock sync.Mutex
 	//lock for distanceOpLock
 	distanceOpLock sync.Mutex
+	//to send health status to broker every 2 second
+	healthTicker = time.NewTicker(2 * time.Second)
 )
 
 //CLIServiceI defines methods for user operations

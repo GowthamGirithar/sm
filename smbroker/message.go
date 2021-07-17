@@ -8,9 +8,9 @@ import (
 
 var (
 	//syncChan for sync response channel with correlation id
-	syncChan map[string]chan Message
+	syncChan = make(map[string]chan Message)
 	//aSyncChan for sync response channel with correlation id
-	aSyncChan          map[string]chan Message
+	aSyncChan          = make(map[string]chan Message)
 	gClientSyncMapLock sync.RWMutex
 	gClientAsncMapLock sync.RWMutex
 )

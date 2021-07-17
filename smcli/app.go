@@ -8,7 +8,6 @@ import (
 	"os/signal"
 	"sm/smbroker"
 	"sm/smlog"
-	"time"
 )
 
 //ShutdownChannel of type struct{}
@@ -71,8 +70,8 @@ func SendHealthStatus(aInCtx context.Context, cliSrv CLIService, chann chan smbr
 			return
 		}
 		select {
-		//send messages to broker every 4 second and target name is empty for the broker
-		case <-time.After(4 * time.Second):
+		//send messages to broker every 2 second and target name is empty for the broker
+		case <-healthTicker.C:
 			cliSrv.Broker.Send(aInCtx, "", smbroker.Message{})
 		//if broker closes the channel and make it to null, we will stop this goroutine
 		case <-ShutdownChann:
