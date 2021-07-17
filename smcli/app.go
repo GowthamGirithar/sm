@@ -19,7 +19,7 @@ var (
 	osSignal      = make(chan os.Signal, 1)
 )
 
-func init() {
+func InitCLIService() {
 	fmt.Print("Initializing the CLI app")
 	rootCtx := context.Background()
 

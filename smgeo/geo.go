@@ -16,13 +16,14 @@ type GeoService struct {
 	//Name of the service
 	Name string
 	//broker in which is registered
-	Broker *smbroker.Broker
+	//has to be interface type which helps in mocking
+	Broker smbroker.BrokerI
 	//Coordinates of this service
 	GeoCoordinates *Coordinates
 }
 
 //GetGeoServiceInstance return the instance
-func GetGeoServiceInstance(broker *smbroker.Broker) *GeoService {
+func GetGeoServiceInstance(broker smbroker.BrokerI) *GeoService {
 	if geoSrvInstance != nil {
 		return geoSrvInstance
 	}
@@ -85,5 +86,5 @@ func (c *GeoService) GetDistance(aInCtx context.Context, lat, log float64) float
 func (c *GeoService) UpdateCoordinates(aInCtx context.Context) {
 	logger := smlog.MustFromContext(aInCtx)
 	geoSrvInstance.GeoCoordinates = GetNewCoordinates()
-	logger.Sugar().Infof("Service coordinates changes to %+v", geoSrvInstance.GeoCoordinates)
+	logger.Sugar().Debugf("Service coordinates changes to %+v", geoSrvInstance.GeoCoordinates)
 }

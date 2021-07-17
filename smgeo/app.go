@@ -25,7 +25,8 @@ var (
 	healthTicker = time.NewTicker(2 * time.Second)
 )
 
-func init() {
+//if we use init() fn, it will be called during tests also.
+func InitGeoService() {
 	rootCtx := context.Background()
 
 	//Get broker instance to register the broker

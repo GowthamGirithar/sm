@@ -15,7 +15,7 @@ const (
 
 var (
 	//brokerInstance
-	brokerInstance *Broker
+	brokerInstance BrokerI
 	//requestChan in which request is delivered
 	requestChan = make(map[string]chan Message)
 	//healthChan in which health ping is received
@@ -174,7 +174,7 @@ func (b *Broker) GetServices(ctx context.Context) ([]string, error) {
 }
 
 //GetBrokerInstance to return the broker instance and create if not present
-func GetBrokerInstance() *Broker {
+func GetBrokerInstance() BrokerI {
 	if brokerInstance != nil {
 		return brokerInstance
 	}

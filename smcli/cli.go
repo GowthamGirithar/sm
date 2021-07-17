@@ -4,10 +4,10 @@ import (
 	"context"
 	"go.uber.org/zap"
 	"math"
-	"math/rand"
 	"sm/smbroker"
 	"sm/smgeo"
 	"sm/smlog"
+	"sm/smrand"
 	"strconv"
 	"strings"
 	"sync"
@@ -17,7 +17,7 @@ import (
 //CLIService define the service
 type CLIService struct {
 	Name   string
-	Broker *smbroker.Broker
+	Broker smbroker.BrokerI
 }
 
 var (
@@ -63,7 +63,7 @@ func (c *CLIService) CalculateMinDistances(aInCtx context.Context, coordinates s
 			msg.TargetSrvName = v
 			stim := smbroker.RestStim{}
 			//generate the correlation id
-			corrId := string(rand.Int63())
+			corrId := smrand.RandomString(8)
 			stim.CorrelationId = corrId
 			msg.RestStim = smbroker.RestStim{}
 			//TODO: Other parameteres
