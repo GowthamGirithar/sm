@@ -115,9 +115,9 @@ func sendMessage(aInCtx context.Context, c *CLIService, reqCh <-chan smbroker.Me
 
 			//Process the channel to store the output for calculation
 			//storeResults to store the results in the map for the processing
-			go func(aInCtx context.Context, serviceName string, ch chan smbroker.Message){
+			go func(aInCtx context.Context, serviceName string, ch chan smbroker.Message) {
 				//time out for the operation default value is 10 minute
-				d:=10 *time.Minute
+				d := 10 * time.Minute
 				if deadline, deadlineSet := ctx.Deadline(); deadlineSet {
 					d = time.Until(deadline)
 					if d <= time.Duration(0) {
@@ -151,11 +151,10 @@ func sendMessage(aInCtx context.Context, c *CLIService, reqCh <-chan smbroker.Me
 						return
 					}
 				}
-			}(aInCtx,msg.TargetSrvName,ch)
+			}(aInCtx, msg.TargetSrvName, ch)
 		}
 	}
 }
-
 
 func (c *CLIService) UpdatePosition(aInCtx context.Context) error {
 	logger := smlog.MustFromContext(aInCtx)

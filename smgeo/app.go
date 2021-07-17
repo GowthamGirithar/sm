@@ -19,8 +19,8 @@ type ShutdownChannel chan struct{}
 
 var (
 	//ShutdownChann to close all the channels of this service
-	ShutdownChann =make(ShutdownChannel)
-	osSignal =make(chan os.Signal, 1)
+	ShutdownChann = make(ShutdownChannel)
+	osSignal      = make(chan os.Signal, 1)
 )
 
 func init() {
@@ -29,9 +29,8 @@ func init() {
 	//Get broker instance to register the broker
 	broker := smbroker.GetBrokerInstance()
 
-
 	//get the geo service instance
-	geoSrv:=GetGeoServiceInstance(broker)
+	geoSrv := GetGeoServiceInstance(broker)
 
 	logger := smlog.Init(rootCtx, geoSrv.Name)
 	ctx := smlog.ContextWithValue(rootCtx, logger)
@@ -45,11 +44,11 @@ func init() {
 	// trap SIGINT to trigger a shutdown.
 	signal.Notify(osSignal, os.Interrupt)
 	go func() {
-		for{
+		for {
 			select {
-			case <- osSignal:
+			case <-osSignal:
 				close(ShutdownChann)
-				ShutdownChann=nil
+				ShutdownChann = nil
 				return
 			}
 		}
@@ -60,7 +59,7 @@ func init() {
 	//send the health status to broker
 	go SendHealthStatus(ctx, *geoSrv, reqChan)
 
-	logger.Sugar().Infof("The service %v with coorindates %+v is initialized successfully", geoSrv.Name,geoSrv.GeoCoordinates)
+	logger.Sugar().Infof("The service %v with coorindates %+v is initialized successfully", geoSrv.Name, geoSrv.GeoCoordinates)
 
 }
 
@@ -88,7 +87,7 @@ func ProcessRequests(aInCtx context.Context, geoSrv GeoService, reqChan chan smb
 				logger.Sugar().Info("Request channel closed")
 				//close all the service owned channels
 				close(ShutdownChann) //
-				ShutdownChann=nil
+				ShutdownChann = nil
 				return
 			}
 			//Get the implementation fn to process the request
@@ -107,16 +106,16 @@ func ProcessRequests(aInCtx context.Context, geoSrv GeoService, reqChan chan smb
 						x := parsedURL.Query().Get("Lat")
 						y := parsedURL.Query().Get("Long")
 						xVal, _ := strconv.ParseFloat(x, 64)
-						yVal, _ := strconv.ParseFloat(y,  64)
+						yVal, _ := strconv.ParseFloat(y, 64)
 						//calculate the distance
-						output := v.GetDistance(aInCtx,xVal, yVal)
+						output := v.GetDistance(aInCtx, xVal, yVal)
 						//return the response
 						msg.RestStim.RespBody = strconv.FormatFloat(output, 'f', 6, 64)
 						msg.RestStim.RespStatus = http.StatusOK
 					}
 				case "PUT":
-					   v.UpdateCoordinates(aInCtx)
-					   msg.RestStim.RespStatus = http.StatusOK
+					v.UpdateCoordinates(aInCtx)
+					msg.RestStim.RespStatus = http.StatusOK
 				}
 			} else {
 				msg.RestStim.RespStatus = http.StatusBadRequest

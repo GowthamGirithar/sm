@@ -5,18 +5,19 @@ import (
 	zap "go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
+
 //Key is of type int
 type key int
 
-const logKey key =1
+const logKey key = 1
 
 var (
 	ZapLoggerConfig *zap.Config
 )
 
 //Init to initialize the logger
-func Init(aInctx context.Context, serviceName string) *zap.Logger{
-	l:=NewLogger(aInctx,serviceName)
+func Init(aInctx context.Context, serviceName string) *zap.Logger {
+	l := NewLogger(aInctx, serviceName)
 	return l
 }
 
@@ -24,7 +25,7 @@ func Init(aInctx context.Context, serviceName string) *zap.Logger{
 func NewLogger(aInctx context.Context, appName string) *zap.Logger {
 	if ZapLoggerConfig == nil {
 		ZapLoggerConfig = &zap.Config{
-			Level:       zap.NewAtomicLevel(),
+			Level: zap.NewAtomicLevel(),
 			Sampling: &zap.SamplingConfig{
 				Initial:    100,
 				Thereafter: 100,
@@ -48,10 +49,10 @@ func NewLogger(aInctx context.Context, appName string) *zap.Logger {
 	}
 	logger := zap.New(zapcore.NewCore(
 		zapcore.NewConsoleEncoder(ZapLoggerConfig.EncoderConfig),
-		nil,//TODO: Pass file loc
+		nil, //TODO: Pass file loc
 		ZapLoggerConfig.Level,
 	))
-  return logger
+	return logger
 }
 
 // ContextWithValue returns a new Context that carries the specified Logger.
@@ -59,12 +60,12 @@ func ContextWithValue(aInCtx context.Context, logger *zap.Logger) context.Contex
 	return context.WithValue(aInCtx, logKey, logger)
 }
 
-func MustFromContext(aInCtx context.Context) *zap.Logger{
+func MustFromContext(aInCtx context.Context) *zap.Logger {
 	if aInCtx == nil {
 		panic("Log Initialization Failed")
 	}
 	logger, ok := aInCtx.Value(logKey).(*zap.Logger)
-	if !ok{
+	if !ok {
 		panic("Log Initialization Failed")
 	}
 	return logger

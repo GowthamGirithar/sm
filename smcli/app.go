@@ -16,29 +16,29 @@ type ShutdownChannel chan struct{}
 
 var (
 	//ShutdownChann to close all the channels of this service
-	ShutdownChann =make(ShutdownChannel)
-	osSignal =make(chan os.Signal, 1)
+	ShutdownChann = make(ShutdownChannel)
+	osSignal      = make(chan os.Signal, 1)
 )
 
-func init(){
+func init() {
 	fmt.Print("Initializing the CLI app")
 	rootCtx := context.Background()
 
 	//Get broker instance to register the broker
-	broker:=smbroker.GetBrokerInstance()
+	broker := smbroker.GetBrokerInstance()
 
 	//initialize the service
-	cliSrv:=CLIService{
+	cliSrv := CLIService{
 		Broker: broker,
-		Name: "CLI",
+		Name:   "CLI",
 	}
 
 	logger := smlog.Init(rootCtx, cliSrv.Name)
 	ctx := smlog.ContextWithValue(rootCtx, logger)
 
 	//register the service to the broker
-	chann, err:=cliSrv.Broker.Register(ctx,cliSrv.Name)
-	if err != nil{
+	chann, err := cliSrv.Broker.Register(ctx, cliSrv.Name)
+	if err != nil {
 		logger.With(zap.Error(err)).Error("Error in registering to the broker.")
 		panic("Error in starting the service")
 	}
@@ -46,20 +46,20 @@ func init(){
 	// trap SIGINT to trigger a shutdown.
 	signal.Notify(osSignal, os.Interrupt)
 	go func() {
-		for{
+		for {
 			select {
-			case <- osSignal:
+			case <-osSignal:
 				close(ShutdownChann)
-				ShutdownChann=nil
+				ShutdownChann = nil
 				return
 			}
 		}
 	}()
 
 	//Process the requests
-	go ProcessRequest(ctx,cliSrv,chann)
+	go ProcessRequest(ctx, cliSrv, chann)
 	//send the health status to broker
-	go SendHealthStatus(ctx,cliSrv, chann)
+	go SendHealthStatus(ctx, cliSrv, chann)
 
 }
 
@@ -82,7 +82,7 @@ func SendHealthStatus(aInCtx context.Context, cliSrv CLIService, chann chan smbr
 }
 
 //ProcessRequest to process the request from request channel
-func ProcessRequest(aInCtx context.Context,cliSrv CLIService,chann chan smbroker.Message ) {
+func ProcessRequest(aInCtx context.Context, cliSrv CLIService, chann chan smbroker.Message) {
 	logger := smlog.MustFromContext(aInCtx)
 	// If shutdown already initiated return
 	if ShutdownChann == nil {
@@ -90,18 +90,14 @@ func ProcessRequest(aInCtx context.Context,cliSrv CLIService,chann chan smbroker
 	}
 	for {
 		select {
-		case _,ok := <- chann :
-			if !ok{
+		case _, ok := <-chann:
+			if !ok {
 				logger.Sugar().Info("Request channel closed")
 				//close all the service owned channels
 				close(ShutdownChann) // closing of channel will send message
-				ShutdownChann=nil
+				ShutdownChann = nil
 				return
 			}
 		}
 	}
 }
-
-
-
-
