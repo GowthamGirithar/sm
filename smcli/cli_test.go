@@ -15,6 +15,7 @@ type CLISuite struct {
 	mockCtrl   *gomock.Controller
 	ctx        context.Context
 	cliService smcli.CLIService
+	broker     *mocks.MockBrokerI
 }
 
 func TestCLISuite(t *testing.T) {
@@ -31,9 +32,9 @@ func (ut *CLISuite) SetUpSuite(c *check.C) {
 }
 
 func (ut *CLISuite) TestUpdatePosition(c *check.C) {
-	broker := mocks.NewMockBrokerI(ut.mockCtrl)
-	broker.EXPECT().Broadcast(gomock.Any(), gomock.Any()).Return(nil)
-	ut.cliService.Broker = broker
+	ut.broker = mocks.NewMockBrokerI(ut.mockCtrl)
+	ut.broker.EXPECT().Broadcast(gomock.Any(), gomock.Any()).Return(nil)
+	ut.cliService.Broker = ut.broker
 	ut.cliService.UpdatePosition(ut.ctx)
 }
 

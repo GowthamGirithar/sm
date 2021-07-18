@@ -39,14 +39,14 @@ func GetGeoServiceInstance(broker smbroker.BrokerI) *GeoService {
 //GetNewCoordinates get new random generated coordinates
 func GetNewCoordinates() *Coordinates {
 	return &Coordinates{
-		lat: rand.Float64(), long: rand.Float64(),
+		Lat: rand.Float64(), Long: rand.Float64(),
 	}
 }
 
 //Coordinates of the location
 type Coordinates struct {
-	lat  float64
-	long float64
+	Lat  float64
+	Long float64
 }
 
 //Service Name which will be in geo-xxx format
@@ -65,10 +65,10 @@ type GeoServiceI interface {
 func (c *GeoService) GetDistance(aInCtx context.Context, lat, log float64) float64 {
 	const PI float64 = 3.141592653589793
 
-	radlat1 := PI * c.GeoCoordinates.lat / 180
+	radlat1 := PI * c.GeoCoordinates.Lat / 180
 	radlat2 := PI * lat / 180
 
-	theta := c.GeoCoordinates.long - log
+	theta := c.GeoCoordinates.Long - log
 	radtheta := PI * theta / 180
 
 	dist := math.Sin(radlat1)*math.Sin(radlat2) + math.Cos(radlat1)*math.Cos(radlat2)*math.Cos(radtheta)
