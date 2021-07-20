@@ -2,6 +2,7 @@ package smgeo
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"math/rand"
 	"sm/smbroker"
@@ -51,7 +52,7 @@ type Coordinates struct {
 
 //Service Name which will be in geo-xxx format
 func GetGeoSrcName() string {
-	return "geo-" + smrand.RandomString(3)
+	return fmt.Sprintf("geo-%+v", smrand.RandomString(3))
 }
 
 //GeoServiceI has methods for the geo service functionalities
