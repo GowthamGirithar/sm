@@ -67,7 +67,7 @@ func InitGeoService() {
 }
 
 //SendHealthStatus to ping to broker every 4 second
-func SendHealthStatus(aInCtx context.Context, geoSrv GeoService, chann chan smbroker.Message) {
+func SendHealthStatus(aInCtx context.Context, geoSrv GeoServiceImpl, chann chan smbroker.Message) {
 	for {
 		select {
 		//send messages to broker every 2 second and target name is empty for the broker
@@ -81,7 +81,7 @@ func SendHealthStatus(aInCtx context.Context, geoSrv GeoService, chann chan smbr
 }
 
 //ProcessRequest to process the request from request channel
-func ProcessRequests(aInCtx context.Context, geoSrv GeoService, reqChan chan smbroker.Message) {
+func ProcessRequests(aInCtx context.Context, geoSrv GeoServiceImpl, reqChan chan smbroker.Message) {
 	logger := smlog.MustFromContext(aInCtx)
 	for {
 		select {
@@ -96,7 +96,7 @@ func ProcessRequests(aInCtx context.Context, geoSrv GeoService, reqChan chan smb
 			//Get the implementation fn to process the request
 			checkGetOverride := reflect.New(msg.RestStim.MoType.Elem())
 			mo := checkGetOverride.Interface()
-			v, lOk := mo.(GeoServiceI)
+			v, lOk := mo.(GeoService)
 			if lOk {
 				switch msg.RestStim.Verb {
 				case http.MethodGet:

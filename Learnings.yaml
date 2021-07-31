@@ -1,0 +1,39 @@
+Learnings:
+
+1. Dont have init function unless it is required - init function will be called by test cases too.
+2. Have the dependency injection is of interface type - is required to mock code in tests
+3. time.after() in select will calculate from the time it reaches select statement
+4. On close of channel , you will get signal in select
+5. os interuppted signal is ctrl+c
+6. In large projects, have a yaml file to maintain the inputs to mockgen and have a script to generate while build
+7. generate the mocks for interface mockgen -destination=mocks/mock_broker.go -package=mocks sm/smbroker BrokerI
+8. Maintain the projects as github URL under src eg:src/github.com/GowthamGirithar/sm
+9. Use context.withValue to store logger instance which helps for the retrieval
+10. For build all the folder build ./... (same for go fmt ./... and  go test./...)
+11. Declaration of sync.RWMutex is enough and sync.RWMutex is to allow multiple read but single write
+12. sync.Mutex for blocking both read and write
+13. Implementation of that struct should be in same package
+14. Use context.withdeadline to check timeout and have defer to cancel otherwise it wont be released to GC until the deadline is reached.
+
+
+Mistakes:
+
+1. Have a executionParam struct to set the servicename , other details and store in context
+2. Instead having global variable , have a setter and getter
+3. New instance will only create and will no need to check if not present create
+4. Have a trace Id in executionParam and whenever we want initiate the new request, we can have copy method in executionParam and take the copy with setting the new trace id.
+5. fmt.Sprintf for formatting string
+6. input to function arguements should start with aIn
+7. Interface name and impl name should be proper
+8. For two word file name have a underscore inbetween for proper readability
+
+
+TODO:
+
+1. i18n
+2. Have app.go struct to define application related
+3. Have a main function where initialize only app struct and then call the execute method with argument as exit channel (app struct register all the functions to be called like init, post init ,etc.,)
+4. In that execute method, Initialize context, logger,
+5. Have a main file under cmd/<projectname>/projectname.go
+6. .golangci.yml Should be there in root directory of every project to have code quality checks
+

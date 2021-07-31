@@ -10,26 +10,22 @@ import (
 	"sm/smrand"
 )
 
-var geoSrvInstance *GeoService
 
 //GeoService defines the service information
-type GeoService struct {
+type GeoServiceImpl struct {
 	//Name of the service
 	Name string
 	//broker in which is registered
 	//has to be interface type which helps in mocking
-	Broker smbroker.BrokerI
+	Broker smbroker.Broker
 	//Coordinates of this service
 	GeoCoordinates *Coordinates
 }
 
 //GetGeoServiceInstance return the instance
-func GetGeoServiceInstance(broker smbroker.BrokerI) *GeoService {
-	if geoSrvInstance != nil {
-		return geoSrvInstance
-	}
+func GetGeoServiceInstance(broker smbroker.Broker) *GeoServiceImpl {
 	//initialize the service
-	geoSrvInstance = &GeoService{
+	geoSrvInstance := &GeoServiceImpl{
 		Broker:         broker,
 		Name:           GetGeoSrcName(),
 		GeoCoordinates: GetNewCoordinates(),
@@ -50,20 +46,24 @@ type Coordinates struct {
 	Long float64
 }
 
+func (c *GeoServiceImpl) updateCoordinates(){
+	c.GeoCoordinates=GetNewCoordinates()
+}
+
 //Service Name which will be in geo-xxx format
 func GetGeoSrcName() string {
 	return fmt.Sprintf("geo-%+v", smrand.RandomString(3))
 }
 
 //GeoServiceI has methods for the geo service functionalities
-type GeoServiceI interface {
+type GeoService interface {
 	//GetDistance to calculate the Euclidian distance
 	GetDistance(aInCtx context.Context, x, y float64) float64
 	//Update the coordinates
 	UpdateCoordinates(aInCtx context.Context)
 }
 
-func (c *GeoService) GetDistance(aInCtx context.Context, lat, log float64) float64 {
+func (c *GeoServiceImpl) GetDistance(aInCtx context.Context, lat, log float64) float64 {
 	const PI float64 = 3.141592653589793
 
 	radlat1 := PI * c.GeoCoordinates.Lat / 180
@@ -84,8 +84,8 @@ func (c *GeoService) GetDistance(aInCtx context.Context, lat, log float64) float
 	return dist
 }
 
-func (c *GeoService) UpdateCoordinates(aInCtx context.Context) {
+func (c *GeoServiceImpl) UpdateCoordinates(aInCtx context.Context) {
 	logger := smlog.MustFromContext(aInCtx)
-	geoSrvInstance.GeoCoordinates = GetNewCoordinates()
-	logger.Sugar().Debugf("Service coordinates changes to %+v", geoSrvInstance.GeoCoordinates)
+	c.updateCoordinates()
+	logger.Sugar().Debugf("Service coordinates changes to %+v", c.GeoCoordinates)
 }

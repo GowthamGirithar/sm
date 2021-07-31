@@ -34,7 +34,7 @@ func (ut *BrokerSuite) TearDownSuite(c *check.C) {
 
 func (ut *BrokerSuite) TestRegister(c *check.C) {
 	//register
-	broker := smbroker.Broker{}
+	broker := smbroker.BrokerImpl{}
 	ch, err := broker.Register(ut.ctx, "TEST")
 	c.Assert(err, check.IsNil)
 	c.Assert(ch, check.NotNil)

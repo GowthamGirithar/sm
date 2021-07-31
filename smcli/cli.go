@@ -17,7 +17,7 @@ import (
 //CLIService define the service
 type CLIService struct {
 	Name   string
-	Broker smbroker.BrokerI
+	Broker smbroker.Broker
 }
 
 var (

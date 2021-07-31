@@ -54,6 +54,7 @@ type Executer interface {
 	Execute() error
 }
 
+
 func (r RestStim) Execute() error {
 	return nil
 }

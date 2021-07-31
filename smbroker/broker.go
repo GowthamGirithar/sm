@@ -14,8 +14,6 @@ const (
 )
 
 var (
-	//brokerInstance
-	brokerInstance BrokerI
 	//requestChan in which request is delivered
 	requestChan = make(map[string]chan Message)
 	//healthChan in which health ping is received
@@ -29,7 +27,7 @@ var (
 )
 
 //BrokerI defines method for the broker related communications
-type BrokerI interface {
+type Broker interface {
 	//Register to register the services and which returns channels to deliver requests
 	Register(ctx context.Context, srvName string) (chan Message, error)
 	//Broadcast to broadcast messages to all the services
@@ -50,12 +48,12 @@ type Service struct {
 }
 
 //Broker contains broker instance details
-type Broker struct {
+type BrokerImpl struct {
 	//name of the broker
 	name string
 }
 
-func (b *Broker) Register(ctx context.Context, srvName string) (chan Message, error) {
+func (b *BrokerImpl) Register(ctx context.Context, srvName string) (chan Message, error) {
 	logger := smlog.MustFromContext(ctx)
 
 	//request channel to process the requests
@@ -87,7 +85,7 @@ func (b *Broker) Register(ctx context.Context, srvName string) (chan Message, er
 	return reqCh, nil
 }
 
-func (b *Broker) Broadcast(aInCtx context.Context, msg Message) error {
+func (b *BrokerImpl) Broadcast(aInCtx context.Context, msg Message) error {
 	logger := smlog.MustFromContext(aInCtx)
 
 	//get all the subscribed services
@@ -103,7 +101,7 @@ func (b *Broker) Broadcast(aInCtx context.Context, msg Message) error {
 	return nil
 }
 
-func (b *Broker) Send(ctx context.Context, targetSrvName string, msg Message) (chan Message, error) {
+func (b *BrokerImpl) Send(ctx context.Context, targetSrvName string, msg Message) (chan Message, error) {
 	logger := smlog.MustFromContext(ctx)
 	// the target service name is empty for broker message
 	if targetSrvName == "" {
@@ -143,7 +141,7 @@ func (b *Broker) Send(ctx context.Context, targetSrvName string, msg Message) (c
 	return nil, nil
 }
 
-func (b *Broker) Response(ctx context.Context, targetSrvName string, msg Message) error {
+func (b *BrokerImpl) Response(ctx context.Context, targetSrvName string, msg Message) error {
 	logger := smlog.MustFromContext(ctx)
 	//Pass the msg to the corresponding response channel for which the request is listening
 	if msg.RestStim.IsResponse && msg.RestStim.CorrelationId != "" {
@@ -161,7 +159,7 @@ func (b *Broker) Response(ctx context.Context, targetSrvName string, msg Message
 
 	return nil
 }
-func (b *Broker) GetServices(ctx context.Context) ([]string, error) {
+func (b *BrokerImpl) GetServices(ctx context.Context) ([]string, error) {
 	logger := smlog.MustFromContext(ctx)
 
 	var serviceNames []string
@@ -174,12 +172,8 @@ func (b *Broker) GetServices(ctx context.Context) ([]string, error) {
 }
 
 //GetBrokerInstance to return the broker instance and create if not present
-func GetBrokerInstance() BrokerI {
-	if brokerInstance != nil {
-		return brokerInstance
-	}
-
-	brokerInstance = &Broker{name: "Mq"}
+func GetBrokerInstance() Broker {
+	brokerInstance := &BrokerImpl{name: "Mq"}
 	return brokerInstance
 }
 
@@ -227,3 +221,4 @@ func removeRegService(name string) {
 	services[index] = services[l-1]
 	services = services[:l-1]
 }
+
